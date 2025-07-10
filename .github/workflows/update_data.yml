@@ -1,1 +1,97 @@
 
+name: Fetch Karachi AQI Data
+on:
+  schedule:
+    # Run every 3 days at 6:00 AM UTC
+    - cron: '0 6 */3 * *'
+  workflow_dispatch:  # Allow manual triggering
+  push:
+    branches: [ main ]
+    paths: 
+      - 'fetch_data.py'  # Fixed: Match your actual script name
+      - '.github/workflows/update_data.yml'
+      - 'requirements.txt'
+      
+jobs:
+  update_data:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        # Fetch full history to preserve existing data file
+        fetch-depth: 0
+        
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Create directories
+      run: |
+        mkdir -p .cache
+        mkdir -p data  # Create data directory for parquet file
+        
+    - name: Cache API requests
+      uses: actions/cache@v3
+      with:
+        path: .cache
+        key: ${{ runner.os }}-api-cache-${{ hashFiles('**/*.py') }}
+        restore-keys: |
+          ${{ runner.os }}-api-cache-
+          
+    - name: Cache existing data file
+      uses: actions/cache@v3
+      with:
+        path: data/karachi_aqi_data.parquet  # Fixed: Match your script's data directory
+        key: ${{ runner.os }}-data-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-data-
+          
+    - name: Run data fetch
+      run: python fetch_data.py  # Fixed: Match your actual script name
+      
+    - name: Check if data was updated
+      id: check_changes
+      run: |
+        if [[ -f data/karachi_aqi_data.parquet ]]; then  # Fixed: Correct file path
+          echo "data_exists=true" >> $GITHUB_OUTPUT
+          echo "File size: $(ls -lh data/karachi_aqi_data.parquet | awk '{print $5}')"
+          echo "Records: $(python -c "import pandas as pd; df = pd.read_parquet('data/karachi_aqi_data.parquet'); print(f'{len(df)} records')")"
+        else
+          echo "data_exists=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Commit and push if changed
+      if: steps.check_changes.outputs.data_exists == 'true'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add data/karachi_aqi_data.parquet  # Fixed: Correct file path
+        git diff --staged --quiet || git commit -m "Update AQI data - $(date '+%Y-%m-%d %H:%M:%S UTC')"
+        git push
+        
+    - name: Upload data as artifact
+      if: steps.check_changes.outputs.data_exists == 'true'
+      uses: actions/upload-artifact@v3
+      with:
+        name: karachi-aqi-data
+        path: data/karachi_aqi_data.parquet  # Fixed: Correct file path
+        retention-days: 30
+
+    - name: Display workflow summary
+      if: steps.check_changes.outputs.data_exists == 'true'
+      run: |
+        echo "## 📊 AQI Data Update Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Data file successfully updated" >> $GITHUB_STEP_SUMMARY
+        echo "- 📁 Location: \`data/karachi_aqi_data.parquet\`" >> $GITHUB_STEP_SUMMARY
+        echo "- 📅 Updated: $(date '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+        if [[ -f data/karachi_aqi_data.parquet ]]; then
+          echo "- 📦 File size: $(ls -lh data/karachi_aqi_data.parquet | awk '{print $5}')" >> $GITHUB_STEP_SUMMARY
+        fi
