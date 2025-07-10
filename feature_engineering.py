@@ -300,7 +300,7 @@ class OptimizedAQIFeatureEngineering:
 # Example usage with optimized settings
 if __name__ == "__main__":
     # Initialize feature engineering
-    fe = OptimizedAQIFeatureEngineering("karachi_aqi_data.parquet")
+    fe = OptimizedAQIFeatureEngineering("data/karachi_aqi_data.parquet")
     
     # Run optimized pipeline
     engineered_data = fe.run_feature_engineering(
@@ -312,7 +312,7 @@ if __name__ == "__main__":
     )
     
     # Save engineered data
-    fe.save_engineered_data("karachi_aqi_engineered_optimized.parquet")
+    fe.save_engineered_data("data/karachi_aqi_engineered_optimized.parquet")
     
     # Display summary
     print("\n=== OPTIMIZED FEATURE ENGINEERING SUMMARY ===")
