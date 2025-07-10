@@ -1,4 +1,3 @@
-
 name: Fetch Karachi AQI Data
 on:
   schedule:
