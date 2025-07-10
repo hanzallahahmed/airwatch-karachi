@@ -8,6 +8,7 @@ on:
     branches: [ main ]
     paths:
       - 'fetch_data.py'
+      - 'feature_engineering.py'  # Include this script too
       - '.github/workflows/update_data.yml'
       - 'requirements.txt'
 
@@ -78,7 +79,7 @@ jobs:
         git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
         git push origin HEAD:main
 
-    - name: Upload data as artifact
+    - name: Upload raw AQI data
       if: steps.check_changes.outputs.data_exists == 'true'
       uses: actions/upload-artifact@v4
       with:
@@ -86,13 +87,25 @@ jobs:
         path: data/karachi_aqi_data.parquet
         retention-days: 30
 
+    - name: Run feature engineering
+      if: steps.check_changes.outputs.data_exists == 'true'
+      run: python feature_engineering.py
+
+    - name: Upload engineered dataset
+      if: steps.check_changes.outputs.data_exists == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: karachi-aqi-engineered
+        path: karachi_aqi_engineered_optimized.parquet
+        retention-days: 30
+
     - name: Display workflow summary
       if: steps.check_changes.outputs.data_exists == 'true'
       run: |
         echo "## 📊 AQI Data Update Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Data file successfully updated" >> $GITHUB_STEP_SUMMARY
-        echo "- 📁 Location: \`data/karachi_aqi_data.parquet\`" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Data file updated and processed" >> $GITHUB_STEP_SUMMARY
+        echo "- 📁 Raw: \`data/karachi_aqi_data.parquet\`" >> $GITHUB_STEP_SUMMARY
+        echo "- 🛠️ Engineered: \`karachi_aqi_engineered_optimized.parquet\`" >> $GITHUB_STEP_SUMMARY
         echo "- 📅 Updated: $(date '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
-        if [[ -f data/karachi_aqi_data.parquet ]]; then
-          echo "- 📦 File size: $(ls -lh data/karachi_aqi_data.parquet | awk '{print $5}')" >> $GITHUB_STEP_SUMMARY
-        fi
+        echo "- 📦 Raw Size: $(ls -lh data/karachi_aqi_data.parquet | awk '{print $5}')" >> $GITHUB_STEP_SUMMARY
+        echo "- 🎯 Final Rows: $(python -c "import pandas as pd; df = pd.read_parquet('karachi_aqi_engineered_optimized.parquet'); print(len(df))")" >> $GITHUB_STEP_SUMMARY
