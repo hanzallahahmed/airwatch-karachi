@@ -23,7 +23,7 @@ jobs:
         fetch-depth: 0
         
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.9'
         
@@ -38,7 +38,7 @@ jobs:
         mkdir -p data  # Create data directory for parquet file
         
     - name: Cache API requests
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: .cache
         key: ${{ runner.os }}-api-cache-${{ hashFiles('**/*.py') }}
@@ -46,7 +46,7 @@ jobs:
           ${{ runner.os }}-api-cache-
           
     - name: Cache existing data file
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: data/karachi_aqi_data.parquet  # Fixed: Match your script's data directory
         key: ${{ runner.os }}-data-${{ github.sha }}
@@ -78,7 +78,7 @@ jobs:
         
     - name: Upload data as artifact
       if: steps.check_changes.outputs.data_exists == 'true'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: karachi-aqi-data
         path: data/karachi_aqi_data.parquet  # Fixed: Correct file path
