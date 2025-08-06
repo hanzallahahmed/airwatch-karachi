@@ -48,9 +48,7 @@ LAT, LON = float(os.getenv("LATITUDE", "24.8414")), float(os.getenv("LONGITUDE",
 
 # Column order to match your existing file
 COLUMN_ORDER = [
-    'date', 'temperature_2m', 'relative_humidity_2m', 'dew_point_2m', 
-    'surface_pressure', 'wind_speed_10m', 'wind_direction_10m', 
-    'precipitation', 'cloud_cover', 'pm10', 'pm2_5', 'carbon_monoxide', 
+    'date', 'wind_speed_10m', 'cloud_cover', 'pm10', 'pm2_5', 
     'nitrogen_dioxide', 'sulphur_dioxide', 'ozone'
 ]
 
@@ -69,7 +67,7 @@ def fetch_aqi_data(start_date, end_date):
     params = {
         "latitude": LAT,
         "longitude": LON,
-        "hourly": ["pm10", "pm2_5", "carbon_monoxide", "nitrogen_dioxide", "sulphur_dioxide", "ozone"],
+        "hourly": ["pm10", "pm2_5", "nitrogen_dioxide", "sulphur_dioxide", "ozone"],
         "timezone": "auto",
         "start_date": start_date,
         "end_date": end_date
@@ -88,7 +86,6 @@ def fetch_aqi_data(start_date, end_date):
             ),
             "pm10": hourly.Variables(0).ValuesAsNumpy(),
             "pm2_5": hourly.Variables(1).ValuesAsNumpy(),
-            "carbon_monoxide": hourly.Variables(2).ValuesAsNumpy(),
             "nitrogen_dioxide": hourly.Variables(3).ValuesAsNumpy(),
             "sulphur_dioxide": hourly.Variables(4).ValuesAsNumpy(),
             "ozone": hourly.Variables(5).ValuesAsNumpy()
@@ -112,9 +109,7 @@ def fetch_weather_data(start_date, end_date):
         "start_date": start_date,
         "end_date": end_date,
         "hourly": [
-            "temperature_2m", "relative_humidity_2m", "dew_point_2m",
-            "surface_pressure", "wind_speed_10m", "wind_direction_10m",
-            "precipitation", "cloud_cover"
+            "wind_speed_10m", "cloud_cover"
         ]
     }
     
@@ -129,13 +124,7 @@ def fetch_weather_data(start_date, end_date):
                 freq=pd.Timedelta(seconds=hourly.Interval()),
                 inclusive="left"
             ),
-            "temperature_2m": hourly.Variables(0).ValuesAsNumpy(),
-            "relative_humidity_2m": hourly.Variables(1).ValuesAsNumpy(),
-            "dew_point_2m": hourly.Variables(2).ValuesAsNumpy(),
-            "surface_pressure": hourly.Variables(3).ValuesAsNumpy(),
             "wind_speed_10m": hourly.Variables(4).ValuesAsNumpy(),
-            "wind_direction_10m": hourly.Variables(5).ValuesAsNumpy(),
-            "precipitation": hourly.Variables(6).ValuesAsNumpy(),
             "cloud_cover": hourly.Variables(7).ValuesAsNumpy(),
         })
         
