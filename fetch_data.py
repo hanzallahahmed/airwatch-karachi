@@ -86,9 +86,9 @@ def fetch_aqi_data(start_date, end_date):
             ),
             "pm10": hourly.Variables(0).ValuesAsNumpy(),
             "pm2_5": hourly.Variables(1).ValuesAsNumpy(),
-            "nitrogen_dioxide": hourly.Variables(3).ValuesAsNumpy(),
-            "sulphur_dioxide": hourly.Variables(4).ValuesAsNumpy(),
-            "ozone": hourly.Variables(5).ValuesAsNumpy()
+            "nitrogen_dioxide": hourly.Variables(2).ValuesAsNumpy(),
+            "sulphur_dioxide": hourly.Variables(3).ValuesAsNumpy(),
+            "ozone": hourly.Variables(4).ValuesAsNumpy()
         })
         
         print(f"✅ AQI data fetched: {len(aqi_df)} records")
@@ -124,8 +124,8 @@ def fetch_weather_data(start_date, end_date):
                 freq=pd.Timedelta(seconds=hourly.Interval()),
                 inclusive="left"
             ),
-            "wind_speed_10m": hourly.Variables(4).ValuesAsNumpy(),
-            "cloud_cover": hourly.Variables(7).ValuesAsNumpy(),
+            "wind_speed_10m": hourly.Variables(0).ValuesAsNumpy(),
+            "cloud_cover": hourly.Variables(1).ValuesAsNumpy(),
         })
         
         print(f"✅ Weather data fetched: {len(weather_df)} records")
@@ -243,7 +243,7 @@ def validate_data_integrity(df, filename):
         issues.append(f"❌ {date_dupes} duplicate dates found")
     
     # Check for null values in critical columns
-    critical_cols = ['date', 'temperature_2m', 'pm2_5', 'pm10']
+    critical_cols = ['date', 'pm2_5', 'pm10']
     for col in critical_cols:
         if col in df.columns:
             nulls = df[col].isnull().sum()
